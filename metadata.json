@@ -1,0 +1,6 @@
+{
+  "name": "SastaTicket Travel Portal",
+  "description": "Comprehensive travel booking portal for flights, hotels, and buses with airline filters, cheap vs luxury pricing options, passenger details, loyalty points reward system, and multi-channel payment gateway.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

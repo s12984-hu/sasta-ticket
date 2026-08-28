@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sasta Ticket - AI Support</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            height: 700px;
+
+            background: white;
+            border-radius: 15px;
+
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            color: white;
+
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.95;
+        }
+
+        #chatbox {
+            flex: 1;
+
+            overflow-y: auto;
+
+            padding: 20px;
+
+            background: #f8f9fa;
+
+            border-bottom: 1px solid #eee;
+        }
+
+        .message {
+            margin: 12px 0;
+
+            padding: 12px 15px;
+
+            border-radius: 12px;
+
+            word-wrap: break-word;
+
+            animation: slideIn 0.3s ease-in;
+
+            max-width: 80%;
+
+            line-height: 1.5;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user {
+            background: #ff6b6b;
+            color: white;
+
+            margin-left: auto;
+
+            text-align: right;
+
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .bot {
+            background: #e8e8e8;
+            color: #333;
+
+            margin-right: auto;
+
+            border-radius: 15px 15px 15px 0;
+        }
+
+        .typing {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #ff6b6b;
+
+            animation: typing 1.4s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+
+        .input-section {
+            display: flex;
+
+            padding: 15px;
+
+            background: white;
+
+            gap: 10px;
+        }
+
+        #userInput {
+            flex: 1;
+
+            padding: 12px 15px;
+
+            border: 2px solid #ddd;
+
+            border-radius: 25px;
+
+            font-size: 14px;
+
+            outline: none;
+
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #ff6b6b;
+        }
+
+        button {
+            padding: 12px 25px;
+
+            background: linear-gradient(
+                135deg,
+                #ff6b6b 0%,
+                #ff8e53 100%
+            );
+
+            color: white;
+
+            border: none;
+
+            border-radius: 25px;
+
+            cursor: pointer;
+
+            font-size: 14px;
+
+            font-weight: bold;
+
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error {
+            background: #ffcdd2;
+
+            color: #c62828;
+
+            margin-right: auto;
+
+            border-radius: 15px 15px 15px 0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                height: 100vh;
+                max-width: 100%;
+
+                border-radius: 0;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .header {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🎫 Sasta Ticket Support</h1>
+
+        <p>
+            24/7 AI Assistant - Booking Help & Inquiries
+        </p>
+    </div>
+
+    <div id="chatbox"></div>
+
+    <div class="input-section">
+
+        <input
+            type="text"
+            id="userInput"
+            placeholder="Ask about bookings, prices, events..."
+            autocomplete="off"
+        >
+
+        <button id="sendButton" onclick="sendMessage()">
+            Send
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+    const chatbox = document.getElementById("chatbox");
+
+    const userInput = document.getElementById("userInput");
+
+    const sendButton = document.getElementById("sendButton");
+
+
+    /*
+        Sasta Ticket predefined responses
+    */
+
+    const sastaTicketResponses = {
+
+        booking:
+            "To book a ticket on Sasta Ticket, browse available events, select your preferred date and seats, and complete checkout.",
+
+        price:
+            "Ticket prices vary depending on the event. Please check the event page for the latest price.",
+
+        cancellation:
+            "Cancellation depends on the event's cancellation policy. Please check your booking details for the applicable policy.",
+
+        refund:
+            "Refund processing time depends on the payment method and the applicable booking policy.",
+
+        payment:
+            "Available payment methods depend on your checkout options. Please check the payment section when booking.",
+
+        support:
+            "For support, please use the official Sasta Ticket support contact shown on your website.",
+
+        events:
+            "Sasta Ticket can provide information about available events. Ask me what type of event you are looking for.",
+
+        discount:
+            "Check the Sasta Ticket homepage or event page for current promotions and discount offers.",
+
+        problem:
+            "Sorry you're having a problem. Please describe the issue and I'll try to help."
+    };
+
+
+    /*
+        Add message to chat
+    */
+
+    function addMessage(text, sender) {
+
+        const messageDiv = document.createElement("div");
+
+        messageDiv.className = `message ${sender}`;
+
+        messageDiv.textContent = text;
+
+        chatbox.appendChild(messageDiv);
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+
+    /*
+        Show typing animation
+    */
+
+    function showTyping() {
+
+        removeTyping();
+
+        const messageDiv = document.createElement("div");
+
+        messageDiv.className = "message bot";
+
+        messageDiv.id = "typing";
+
+        messageDiv.innerHTML = `
+            <div class="typing">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+
+        chatbox.appendChild(messageDiv);
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+
+    /*
+        Remove typing animation
+    */
+
+    function removeTyping() {
+
+        const typing = document.getElementById("typing");
+
+        if (typing) {
+            typing.remove();
+        }
+    }
+
+
+    /*
+        Check predefined Sasta Ticket responses
+    */
+
+    function getSastaTicketResponse(userMessage) {
+
+        const lowerMessage = userMessage.toLowerCase();
+
+        for (
+            const [keyword, response]
+            of Object.entries(sastaTicketResponses)
+        ) {
+
+            if (lowerMessage.includes(keyword)) {
+                return response;
+            }
+        }
+
+        return null;
+    }
+
+
+    /*
+        Send message
+    */
+
+    async function sendMessage() {
+
+        const message = userInput.value.trim();
+
+        if (!message) {
+            return;
+        }
+
+
+        // Disable input while processing
+
+        userInput.disabled = true;
+
+        sendButton.disabled = true;
+
+
+        // Add user's message
+
+        addMessage(message, "user");
+
+        userInput.value = "";
+
+
+        /*
+            First check predefined responses
+        */
+
+        const sastaResponse =
+            getSastaTicketResponse(message);
+
+
+        if (sastaResponse) {
+
+            showTyping();
+
+            setTimeout(() => {
+
+                removeTyping();
+
+                addMessage(
+                    sastaResponse,
+                    "bot"
+                );
+
+                userInput.disabled = false;
+
+                sendButton.disabled = false;
+
+                userInput.focus();
+
+            }, 500);
+
+            return;
+        }
+
+
+        /*
+            Otherwise send message to our
+            secure backend API
+        */
+
+        showTyping();
+
+
+        try {
+
+            const response = await fetch(
+                "/api/chat",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        message: message
+                    })
+                }
+            );
+
+
+            const result =
+                await response.json();
+
+
+            removeTyping();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.error ||
+                    "AI service error"
+                );
+            }
+
+
+            const reply =
+                result.reply;
+
+
+            if (reply) {
+
+                addMessage(
+                    reply,
+                    "bot"
+                );
+
+            } else {
+
+                addMessage(
+                    "I'm here to help! Ask me about bookings, prices, refunds, or events.",
+                    "bot"
+                );
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Chat error:",
+                error
+            );
+
+
+            removeTyping();
+
+
+            addMessage(
+                "⚠️ Sorry, the AI service is temporarily unavailable. Please try again later.",
+                "error"
+            );
+
+        }
+
+
+        userInput.disabled = false;
+
+        sendButton.disabled = false;
+
+        userInput.focus();
+    }
+
+
+    /*
+        Press Enter to send
+    */
+
+    userInput.addEventListener(
+        "keypress",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                sendMessage();
+            }
+        }
+    );
+
+
+    /*
+        Welcome message
+    */
+
+    window.addEventListener(
+        "load",
+        function() {
+
+            addMessage(
+                "🎫 Welcome to Sasta Ticket Support! I can help with bookings, refunds, events, prices, and general questions. What can I assist you with?",
+                "bot"
+            );
+
+            userInput.focus();
+        }
+    );
+
+</script>
+
+</body>
+</html>
